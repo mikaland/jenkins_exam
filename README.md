@@ -17,7 +17,7 @@ docker run --name my-custom-nginx-container \
 
 ## @TODO
 
-- docker-compose : nginx config KO
-- docker push KO : denied: requested access to the resource is denied
-- helm chart
-- Jenkinsfile
+- @TODO: docker-compose : nginx config KO
+- @DONE: docker push KO : denied: requested access to the resource is denied / cause : dû au poste, voir config docker !
+- @TODO: helm chart
+- @TODO: Jenkinsfile

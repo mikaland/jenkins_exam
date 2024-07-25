@@ -17,7 +17,7 @@ spec:
       #     command: ['sh', '-c', 'echo -e "Checking for the availability of MySQL Server deployment"; while ! nc -z cast-db 5432; do sleep 1; printf "-"; done; echo -e "  >> MySQL DB Server has started";']   
       containers:
       - name: cast
-        image: mikaland77/jenkins_devops_exam_cast_service:latest
+        image: mikalander77/jenkins_exam_cast:jenkins_devops_exams-cast_service
         command: ["uvicorn", "app.main:app", "--reload",  "--host", "0.0.0.0", "--port", "8000"]
         resources:
           limits:
