@@ -49,6 +49,7 @@ kind: Service
 metadata:
   name: cast
 spec:
+  type: ClusterIP
   selector:
     app: cast
   ports:
