@@ -11,10 +11,10 @@ spec:
       labels:
         app: movie
     spec:
-      # initContainers:
-      #   - name: init-db
-      #     image: busybox:1.31
-      #     command: ['sh', '-c', 'echo -e "Checking for the availability of MySQL Server deployment"; while ! nc -z movie-db 5432; do sleep 1; printf "-"; done; echo -e "  >> MySQL DB Server has started";']   
+      initContainers:
+        - name: init-db
+          image: busybox:1.31
+          command: ['sh', '-c', 'echo -e "Checking for the availability of MySQL Server deployment"; while ! nc -z movie-db 5432; do sleep 1; printf "-"; done; echo -e "  >> MySQL DB Server has started";']   
       containers:
       - name: movie
         image: mikalander77/jenkins_exam_movie:jenkins_devops_exams-movie_service
