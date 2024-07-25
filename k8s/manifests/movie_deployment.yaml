@@ -18,6 +18,7 @@ spec:
       containers:
       - name: movie
         image: mikalander77/jenkins_exam_movie:jenkins_devops_exams-movie_service
+        command: ["uvicorn", "app.main:app", "--reload",  "--host", "0.0.0.0", "--port", "8000"]        
         resources:
           limits:
             memory: "128Mi"
