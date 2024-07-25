@@ -51,9 +51,11 @@ kind: Service
 metadata:
   name: movie
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: movie
   ports:
-  - port: 8003
-    targetPort: 8000
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30100

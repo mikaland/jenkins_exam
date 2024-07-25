@@ -49,9 +49,11 @@ kind: Service
 metadata:
   name: cast
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: cast
   ports:
-  - port: 8002
-    targetPort: 8000
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30200
