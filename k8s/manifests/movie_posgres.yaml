@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: movie-db
+  labels:
+    app: movie-db
+spec:
+  serviceName: movie-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movie-db
+  template:
+    metadata:
+      labels:
+        app: movie-db
+    spec:
+      containers:
+        - image: docker.io/postgres
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "250m"
+          name: postgres
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-db-configmap
+                  key: postgres-dbname
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: movie-db-secret
+                  key: postgres-root-username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-db-secret
+                  key: postgres-root-password
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/
+              name: db-persistent-storage
+      volumes:
+        - name: db-persistent-storage
+          persistentVolumeClaim:
+            claimName: movie-db-pv-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: movie-db-pv
+  labels:
+    app: movie-db
+spec:
+  storageClassName: manuel
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/postgres"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: movie-db-pv-claim
+  labels:
+    app: movie-db
+spec:
+  storageClassName: manuel
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-db
+  labels:
+    app: movie-db
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: movie-db
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: movie-db-secret
+  labels:
+    app: movie-db
+type: Opaque
+data:
+  postgres-root-username: YWRtaW4= # admin
+  postgres-root-password: cGFzc3dvcmQ= # password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: movie-db-configmap
+  labels:
+    app: movie-db
+data:
+  postgres-dbname: movie_db_dev

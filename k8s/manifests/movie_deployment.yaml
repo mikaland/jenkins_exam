@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-db
+spec:
+  selector:
+    matchLabels:
+      app: movie-db
+  template:
+    metadata:
+      labels:
+        app: movie-db
+    spec:
+      # initContainers:
+      #   - name: init-db
+      #     image: busybox:1.31
+      #     command: ['sh', '-c', 'echo -e "Checking for the availability of MySQL Server deployment"; while ! nc -z movie-db 5432; do sleep 1; printf "-"; done; echo -e "  >> MySQL DB Server has started";']   
+      containers:
+      - name: movie-db
+        image: mikaland77/jenkins_devops_exam_movie_service:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8000
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: movie-db-configmap
+                key: postgres-dbname
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: movie-db-secret
+                key: postgres-root-username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: movie-db-secret
+                key: postgres-root-password
+          - name: DATABASE_URI
+            value: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@movie-db/${POSTGRES_DB}"
+          - name: CAST_SERVICE_HOST_URL
+            value: "http://cast:8000/api/v1/casts/"
