@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jenkins-ingress
+  # namespace: prod
+  annotations:
+    # cert-manager.io/cluster-issuer: letsencrypt-jenkins-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - secretName: jenkins-secret
+      hosts:
+        - jenkins.maikimike.cloudns.be
+  rules:
+    - host: jenkins.maikimike.cloudns.be
+      http:
+        paths:
+          - path: /api/v1/movies
+            pathType: Prefix
+            backend:
+              service:
+                name: movie
+                port:
+                  number: 80
+          - path: /api/v1/cast
+            pathType: Prefix
+            backend:
+              service:
+                name: cast
+                port:
+                  number: 80
+---
