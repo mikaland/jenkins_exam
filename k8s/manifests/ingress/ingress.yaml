@@ -8,10 +8,10 @@ metadata:
     # cert-manager.io/cluster-issuer: letsencrypt-jenkins-prod
 spec:
   ingressClassName: traefik
-  tls:
-    - secretName: jenkins-secret
-      hosts:
-        - jenkins.maikimike.cloudns.be
+  # tls:
+  #   - secretName: jenkins-secret
+  #     hosts:
+  #       - jenkins.maikimike.cloudns.be
   rules:
     - host: jenkins.maikimike.cloudns.be
       http:
@@ -23,7 +23,7 @@ spec:
                 name: movie
                 port:
                   number: 80
-          - path: /api/v1/cast
+          - path: /api/v1/casts
             pathType: Prefix
             backend:
               service:

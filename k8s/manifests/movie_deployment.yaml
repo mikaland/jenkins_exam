@@ -51,11 +51,11 @@ kind: Service
 metadata:
   name: movie
 spec:
-  type: NodePort
+  # type: NodePort
   selector:
     app: movie
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8000
-      nodePort: 30100
+      # nodePort: 30100

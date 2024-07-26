@@ -49,11 +49,11 @@ kind: Service
 metadata:
   name: cast
 spec:
-  type: NodePort
+  # type: NodePort
   selector:
     app: cast
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8000
-      nodePort: 30200
+      # nodePort: 30200
