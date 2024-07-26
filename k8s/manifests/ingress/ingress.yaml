@@ -22,12 +22,12 @@ spec:
               service:
                 name: movie
                 port:
-                  number: 80
+                  number: 81
           - path: /api/v1/casts
             pathType: Prefix
             backend:
               service:
                 name: cast
                 port:
-                  number: 80
+                  number: 81
 ---

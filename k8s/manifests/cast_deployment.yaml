@@ -54,6 +54,6 @@ spec:
     app: cast
   ports:
     - protocol: TCP
-      port: 80
+      port: 81
       targetPort: 8000
       # nodePort: 30200
