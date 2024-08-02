@@ -3,7 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jenkins-ingress
-  # namespace: prod
+  namespace: default
   annotations:
     # cert-manager.io/cluster-issuer: letsencrypt-jenkins-prod
 spec:
@@ -13,21 +13,28 @@ spec:
   #     hosts:
   #       - jenkins.maikimike.cloudns.be
   rules:
-    - host: jenkins.maikimike.cloudns.be
+    - host: exam.jenkins.dev
       http:
         paths:
-          - path: /api/v1/movies
+          - path: /
             pathType: Prefix
             backend:
               service:
-                name: movie
+                name: nginx-svc
                 port:
-                  number: 81
-          - path: /api/v1/casts
-            pathType: Prefix
-            backend:
-              service:
-                name: cast
-                port:
-                  number: 81
+                  number: 80
+          # - path: /api/v1/movies
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: movie
+          #       port:
+          #         number: 80
+          # - path: /api/v1/casts
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: cast
+          #       port:
+          #         number: 80
 ---

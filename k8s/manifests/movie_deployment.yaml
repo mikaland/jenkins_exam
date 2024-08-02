@@ -1,7 +1,9 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: movie
+  namespace: default
 spec:
   selector:
     matchLabels:
@@ -17,8 +19,8 @@ spec:
           command: ['sh', '-c', 'echo -e "Checking for the availability of MySQL Server deployment"; while ! nc -z movie-db 5432; do sleep 1; printf "-"; done; echo -e "  >> MySQL DB Server has started";']   
       containers:
       - name: movie
-        image: mikalander77/jenkins_exam_movie:jenkins_devops_exams-movie_service
-        command: ["uvicorn", "app.main:app", "--reload",  "--host", "0.0.0.0", "--port", "8000"]        
+        image: mikalander77/jenkins_exam_movie:latest
+        # command: ["uvicorn", "app.main:app", "--reload",  "--host", "0.0.0.0", "--port", "8000"]
         resources:
           limits:
             memory: "128Mi"
@@ -43,19 +45,22 @@ spec:
                 key: postgres-root-password
           - name: DATABASE_URI
             value: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@movie-db/${POSTGRES_DB}"
+            # value: "postgresql://admin:password@movie-db/movie_db_dev"
           - name: CAST_SERVICE_HOST_URL
-            value: "http://cast:8000/api/v1/casts/"
+            value: "http://cast.default.svc.cluster.local:8000/api/v1/casts/"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: movie
+  namespace: default
 spec:
-  # type: NodePort
+  type: NodePort
   selector:
     app: movie
   ports:
     - protocol: TCP
-      port: 81
+      port: 80
       targetPort: 8000
-      # nodePort: 30100
+      nodePort: 30100
+---

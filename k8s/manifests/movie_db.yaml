@@ -1,7 +1,9 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: movie-db
+  namespace: default
   labels:
     app: movie-db
 spec:
@@ -16,13 +18,13 @@ spec:
         app: movie-db
     spec:
       containers:
-        - image: docker.io/postgres
+        - name: postgres
+          image: postgres@sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609
           imagePullPolicy: IfNotPresent
           resources:
             limits:
               memory: "2Gi"
               cpu: "250m"
-          name: postgres
           env:
             - name: POSTGRES_DB
               valueFrom:
@@ -45,10 +47,10 @@ spec:
             - containerPort: 5432
               protocol: TCP
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data/
-              name: db-persistent-storage
+            - mountPath: /var/lib/postgresql/data
+              name: movie-db-persistent-storage
       volumes:
-        - name: db-persistent-storage
+        - name: movie-db-persistent-storage
           persistentVolumeClaim:
             claimName: movie-db-pv-claim
 ---
@@ -56,21 +58,24 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: movie-db-pv
+  namespace: default
   labels:
     app: movie-db
 spec:
+  persistentVolumeReclaimPolicy: Delete
   storageClassName: manuel
   capacity:
     storage: 10Gi
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: "/mnt/postgres"
+    path: "/mnt/movie-db"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: movie-db-pv-claim
+  namespace: default
   labels:
     app: movie-db
 spec:
@@ -85,6 +90,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: movie-db
+  namespace: default
   labels:
     app: movie-db
 spec:
@@ -101,6 +107,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: movie-db-secret
+  namespace: default
   labels:
     app: movie-db
 type: Opaque
@@ -112,7 +119,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: movie-db-configmap
+  namespace: default
   labels:
     app: movie-db
 data:
   postgres-dbname: movie_db_dev
+  # https://hub.docker.com/_/postgres
+  # /docker-entrypoint-initdb.d/init-user-db.sh
+  # postgres.sql: |-
+  #   DROP DATABASE IF EXISTS movie_db_dev;
+  #   CREATE DATABASE movie_db_dev;
+---
