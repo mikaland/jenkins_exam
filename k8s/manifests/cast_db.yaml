@@ -1,7 +1,9 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: cast-db
+  namespace: default
   labels:
     app: cast-db
 spec:
@@ -16,19 +18,17 @@ spec:
         app: cast-db
     spec:
       containers:
-        - image: docker.io/postgres
+        - name: postgres
+          image: postgres@sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609
           imagePullPolicy: IfNotPresent
           resources:
             limits:
               memory: "2Gi"
               cpu: "250m"
-          name: postgres
+          ports:
+            - containerPort: 5432
+              protocol: TCP
           env:
-            - name: POSTGRES_DB
-              valueFrom:
-                configMapKeyRef:
-                  name: cast-db-configmap
-                  key: postgres-dbname
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
@@ -39,16 +39,18 @@ spec:
                 secretKeyRef:
                   name: cast-db-secret
                   key: postgres-root-password
-            - name: POSTGRES_HOST_AUTH_METHOD
-              value: trust
-          ports:
-            - containerPort: 5432
-              protocol: TCP
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: cast-db-configmap
+                  key: postgres-dbname
+            # - name: POSTGRES_HOST_AUTH_METHOD
+            #   value: trust
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data/
-              name: db-persistent-storage
+            - mountPath: /var/lib/postgresql/data
+              name: cast-db-persistent-storage
       volumes:
-        - name: db-persistent-storage
+        - name: cast-db-persistent-storage
           persistentVolumeClaim:
             claimName: cast-db-pv-claim
 ---
@@ -56,21 +58,24 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: cast-db-pv
+  namespace: default
   labels:
     app: cast-db
 spec:
+  persistentVolumeReclaimPolicy: Delete
   storageClassName: manuel
   capacity:
     storage: 10Gi
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: "/mnt/postgres"
+    path: "/mnt/cast-db"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: cast-db-pv-claim
+  namespace: default
   labels:
     app: cast-db
 spec:
@@ -85,6 +90,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cast-db
+  namespace: default
   labels:
     app: cast-db
 spec:
@@ -101,6 +107,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cast-db-secret
+  namespace: default
   labels:
     app: cast-db
 type: Opaque
@@ -112,7 +119,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cast-db-configmap
+  namespace: default
   labels:
     app: cast-db
 data:
   postgres-dbname: cast_db_dev
+  # https://hub.docker.com/_/postgres
+  # /docker-entrypoint-initdb.d/init-db.sh
+  # postgres_cast.sql: |-
+  #   DROP DATABASE IF EXISTS cast_db_dev;
+  #   CREATE DATABASE cast_db_dev;
+---

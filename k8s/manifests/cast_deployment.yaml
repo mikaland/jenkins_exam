@@ -1,7 +1,9 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cast
+  namespace: default
 spec:
   selector:
     matchLabels:
@@ -17,8 +19,7 @@ spec:
           command: ['sh', '-c', 'echo -e "Checking for the availability of MySQL Server deployment"; while ! nc -z cast-db 5432; do sleep 1; printf "-"; done; echo -e "  >> MySQL DB Server has started";']   
       containers:
       - name: cast
-        image: mikalander77/jenkins_exam_cast:jenkins_devops_exams-cast_service
-        command: ["uvicorn", "app.main:app", "--reload",  "--host", "0.0.0.0", "--port", "8000"]
+        image: mikalander77/jenkins_exam_cast:latest
         resources:
           limits:
             memory: "128Mi"
@@ -43,17 +44,20 @@ spec:
                 key: postgres-root-password
           - name: DATABASE_URI
             value: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cast-db/${POSTGRES_DB}"
+            # value: "postgresql://admin:password@cast-db/cast_db_dev"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: cast
+  namespace: default
 spec:
-  # type: NodePort
+  type: NodePort
   selector:
     app: cast
   ports:
     - protocol: TCP
-      port: 81
+      port: 80
       targetPort: 8000
-      # nodePort: 30200
+      nodePort: 30200
+---
