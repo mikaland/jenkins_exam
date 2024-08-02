@@ -46,7 +46,7 @@ spec:
           - name: DATABASE_URI
             value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@movie-db/$(POSTGRES_DB)"
           - name: CAST_SERVICE_HOST_URL
-            value: "http://cast.default.svc.cluster.local:8000/api/v1/casts/"
+            value: "http://cast.default.svc.cluster.local:80/api/v1/casts/"
 ---
 apiVersion: v1
 kind: Service
