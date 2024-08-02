@@ -43,8 +43,7 @@ spec:
                 name: cast-db-secret
                 key: postgres-root-password
           - name: DATABASE_URI
-            value: "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@cast-db/$POSTGRES_DB"
-            # value: "postgresql://admin:password@cast-db/cast_db_dev"
+            value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@cast-db/$(POSTGRES_DB)"
 ---
 apiVersion: v1
 kind: Service
