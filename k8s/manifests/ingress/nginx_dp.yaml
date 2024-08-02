@@ -16,10 +16,10 @@ spec:
       initContainers:
         - name: init-cast
           image: busybox:1.31
-          command: ['sh', '-c', 'echo -e "Checking for the availability of cast deployment"; while ! nc -z cast.default.svc.cluster.local 8000; do sleep 1; printf "-"; done; echo -e "  >> cast service has started";'] 
+          command: ['sh', '-c', 'echo -e "Checking for the availability of cast deployment"; while ! nc -z cast.default.svc.cluster.local 80; do sleep 1; printf "-"; done; echo -e "  >> cast service has started";'] 
         - name: init-movie
           image: busybox:1.31
-          command: ['sh', '-c', 'echo -e "Checking for the availability of movie deployment"; while ! nc -z movie.default.svc.cluster.local 8000; do sleep 1; printf "-"; done; echo -e "  >> movie service has started";'] 
+          command: ['sh', '-c', 'echo -e "Checking for the availability of movie deployment"; while ! nc -z movie.default.svc.cluster.local 80; do sleep 1; printf "-"; done; echo -e "  >> movie service has started";'] 
       containers:
         - name: nginx
           image: nginx
