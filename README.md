@@ -22,9 +22,9 @@ Learn to build your own microservice using Python and FastAPI
 
 ```sh
 # networking tools
-kubectl run tmp-shell --rm -i --tty --image nicolaka/netshoot -n exam -- /bin/bash
+kubectl run tmp-shell --rm -i --tty --image nicolaka/netshoot -n default -- /bin/bash
 # postgres client
-kubectl run tmp-postgres --rm -i --tty --image postgres -- /bin/bash
+kubectl run tmp-postgres --rm -i --tty --image postgres -n default -- /bin/bash
 ```
 
 ## NGINX
