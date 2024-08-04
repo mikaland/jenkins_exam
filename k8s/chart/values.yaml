@@ -385,7 +385,7 @@ nginx:
     repository: nginx
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "latest"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -444,7 +444,7 @@ nginx:
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
     # limits:
-    #   cpu: 100m
+    #   cpu: 500m
     #   memory: 128Mi
     # requests:
     #   cpu: 100m
