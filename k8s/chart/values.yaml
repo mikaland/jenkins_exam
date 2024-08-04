@@ -103,7 +103,7 @@ moviedb:
   image:
     repository: postgres
     pullPolicy: IfNotPresent
-    tag: "@sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609"
+    sha: "sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -292,7 +292,7 @@ castdb:
     repository: postgres
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "@sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609"
+    sha: "sha256:d0f363f8366fbc3f52d172c6e76bc27151c3d643b870e1062b4e8bfe65baf609"
 
   imagePullSecrets: []
   nameOverride: ""

@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: "{{ .Values.moviedb.image.repository }}{{ .Values.moviedb.image.tag }}"
+          image: "{{ .Values.moviedb.image.repository }}@{{ .Values.moviedb.image.sha }}"
           imagePullPolicy: {{ .Values.moviedb.image.pullPolicy }}
           resources:
             {{- toYaml .Values.moviedb.resources | nindent 12 }}

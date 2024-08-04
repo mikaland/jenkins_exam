@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: "{{ .Values.castdb.image.repository }}{{ .Values.castdb.image.tag }}"
+          image: "{{ .Values.castdb.image.repository }}@{{ .Values.castdb.image.sha }}"
           imagePullPolicy: {{ .Values.castdb.image.pullPolicy }}
           resources:
             {{- toYaml .Values.castdb.resources | nindent 12 }}
