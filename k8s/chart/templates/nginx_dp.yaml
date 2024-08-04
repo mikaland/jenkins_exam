@@ -3,7 +3,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
-  namespace: default
 spec:
   selector:
     matchLabels:
@@ -16,19 +15,18 @@ spec:
       initContainers:
         - name: init-cast
           image: busybox:1.31
-          command: ['sh', '-c', 'echo -e "Checking for the availability of cast deployment"; while ! nc -z cast.default.svc.cluster.local 80; do sleep 1; printf "-"; done; echo -e "  >> cast service has started";'] 
+          command: ['sh', '-c', 'echo -e "Checking for the availability of cast deployment"; while ! nc -z cast.default.svc.cluster.local {{ .Values.cast.service.port }}; do sleep 1; printf "-"; done; echo -e "  >> cast service has started";'] 
         - name: init-movie
           image: busybox:1.31
-          command: ['sh', '-c', 'echo -e "Checking for the availability of movie deployment"; while ! nc -z movie.default.svc.cluster.local 80; do sleep 1; printf "-"; done; echo -e "  >> movie service has started";'] 
+          command: ['sh', '-c', 'echo -e "Checking for the availability of movie deployment"; while ! nc -z movie.default.svc.cluster.local {{ .Values.movie.service.port }}; do sleep 1; printf "-"; done; echo -e "  >> movie service has started";'] 
       containers:
         - name: nginx
-          image: nginx
+          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
           resources:
-            limits:
-              memory: "128Mi"
-              cpu: "500m"
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
           ports:
-            - containerPort: 80
+            - containerPort: {{ .Values.nginx.service.port }}
           volumeMounts:
             - mountPath: /etc/nginx/conf.d
               readOnly: true
@@ -49,18 +47,17 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-conf
-  namespace: default
 data:
   nginx.conf: |
     server {
-      listen 80;
+      listen {{ .Values.nginx.service.port }};
 
       location /api/v1/movies {
-        proxy_pass http://movie.default.svc.cluster.local:80/api/v1/movies;
+        proxy_pass http://movie.default.svc.cluster.local:{{ .Values.nginx.service.targetPort }}/api/v1/movies;
       }
 
       location /api/v1/casts {
-        proxy_pass http://cast.default.svc.cluster.local:80/api/v1/casts;
+        proxy_pass http://cast.default.svc.cluster.local:{{ .Values.nginx.service.targetPort }}/api/v1/casts;
       }
 
     }
@@ -69,14 +66,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx-svc
-  namespace: default
 spec:
-  type: NodePort
+  type: {{ .Values.nginx.service.type }}
   selector:
     app: nginx
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
-      nodePort: 30300
+      port: {{ .Values.nginx.service.port }}
+      targetPort: {{ .Values.nginx.service.targetPort }}
+      nodePort: {{ .Values.nginx.service.nodePort }}
 ---
