@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cast
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: cast
+  template:
+    metadata:
+      labels:
+        app: cast
+    spec:
+      initContainers:
+        - name: init-db
+          image: busybox:1.31
+          command: ['sh', '-c', 'echo -e "Checking for the availability of POSTGRESQL Server deployment"; while ! nc -z cast-db {{ .Values.castdb.service.port }}; do sleep 1; printf "-"; done; echo -e "  >> POSTGRESQL DB Server has started";']   
+      containers:
+      - name: cast
+        image: "{{ .Values.cast.image.repository }}:{{ .Values.cast.image.tag }}"
+        imagePullPolicy: {{ .Values.cast.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.cast.resources | nindent 12 }}
+        ports:
+        - containerPort: {{ .Values.cast.service.targetPort }}
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: cast-db-configmap
+                key: postgres-dbname
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: cast-db-secret
+                key: postgres-root-username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: cast-db-secret
+                key: postgres-root-password
+          - name: DATABASE_URI
+            value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@cast-db/$(POSTGRES_DB)"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast
+  namespace: default
+spec:
+  type: {{ .Values.cast.service.type }}
+  selector:
+    app: cast
+  ports:
+    - protocol: TCP
+      port: {{ .Values.cast.service.port }}
+      targetPort: {{ .Values.cast.service.targetPort }}
+      nodePort: {{ .Values.cast.service.nodePort }}
+---

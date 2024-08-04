@@ -1,0 +1,130 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: movie-db
+  namespace: default
+  labels:
+    app: movie-db
+spec:
+  serviceName: movie-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movie-db
+  template:
+    metadata:
+      labels:
+        app: movie-db
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.moviedb.image.repository }}{{ .Values.moviedb.image.tag }}"
+          imagePullPolicy: {{ .Values.moviedb.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.moviedb.resources | nindent 12 }}
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-db-configmap
+                  key: postgres-dbname
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: movie-db-secret
+                  key: postgres-root-username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-db-secret
+                  key: postgres-root-password
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+          ports:
+            - containerPort: {{ .Values.moviedb.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: movie-db-persistent-storage
+      volumes:
+        - name: movie-db-persistent-storage
+          persistentVolumeClaim:
+            claimName: movie-db-pv-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: movie-db-pv
+  namespace: default
+  labels:
+    app: movie-db
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: manuel
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/movie-db"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: movie-db-pv-claim
+  namespace: default
+  labels:
+    app: movie-db
+spec:
+  storageClassName: manuel
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-db
+  namespace: default
+  labels:
+    app: movie-db
+spec:
+  type: {{ .Values.moviedb.service.type }}
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: {{ .Values.moviedb.service.port }}
+      targetPort: {{ .Values.moviedb.service.port }}
+  selector:
+    app: movie-db
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: movie-db-secret
+  namespace: default
+  labels:
+    app: movie-db
+type: Opaque
+data:
+  postgres-root-username: YWRtaW4= # admin
+  postgres-root-password: cGFzc3dvcmQ= # password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: movie-db-configmap
+  namespace: default
+  labels:
+    app: movie-db
+data:
+  postgres-dbname: movie_db_dev
+  # https://hub.docker.com/_/postgres
+  # /docker-entrypoint-initdb.d/init-user-db.sh
+  # postgres.sql: |-
+  #   DROP DATABASE IF EXISTS movie_db_dev;
+  #   CREATE DATABASE movie_db_dev;
+---

@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: movie
+  template:
+    metadata:
+      labels:
+        app: movie
+    spec:
+      initContainers:
+        - name: init-db
+          image: busybox:1.31
+          command: ['sh', '-c', 'echo -e "Checking for the availability of POSTGRESQL Server deployment"; while ! nc -z movie-db {{ .Values.moviedb.service.port }}; do sleep 1; printf "-"; done; echo -e "  >> POSTGRESQL DB Server has started";']   
+      containers:
+      - name: movie
+        image: "{{ .Values.movie.image.repository }}:{{ .Values.movie.image.tag }}"
+        imagePullPolicy: {{ .Values.movie.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.movie.resources | nindent 12 }}
+        ports:
+        - containerPort: {{ .Values.movie.service.targetPort }}
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: movie-db-configmap
+                key: postgres-dbname
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: movie-db-secret
+                key: postgres-root-username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: movie-db-secret
+                key: postgres-root-password
+          - name: DATABASE_URI
+            value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@movie-db/$(POSTGRES_DB)"
+          - name: CAST_SERVICE_HOST_URL
+            value: "http://cast.default.svc.cluster.local:{{ .Values.cast.service.port }}/api/v1/casts/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie
+  namespace: default
+spec:
+  type: {{ .Values.movie.service.type }}
+  selector:
+    app: movie
+  ports:
+    - protocol: TCP
+      port: {{ .Values.movie.service.port }}
+      targetPort: {{ .Values.movie.service.targetPort }}
+      nodePort: {{ .Values.movie.service.nodePort }}
+---

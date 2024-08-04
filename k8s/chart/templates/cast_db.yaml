@@ -1,0 +1,130 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cast-db
+  namespace: default
+  labels:
+    app: cast-db
+spec:
+  serviceName: cast-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-db
+  template:
+    metadata:
+      labels:
+        app: cast-db
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.castdb.image.repository }}{{ .Values.castdb.image.tag }}"
+          imagePullPolicy: {{ .Values.castdb.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.castdb.resources | nindent 12 }}
+          ports:
+            - containerPort: {{ .Values.castdb.service.port }}
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cast-db-secret
+                  key: postgres-root-username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cast-db-secret
+                  key: postgres-root-password
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: cast-db-configmap
+                  key: postgres-dbname
+            # - name: POSTGRES_HOST_AUTH_METHOD
+            #   value: trust
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: cast-db-persistent-storage
+      volumes:
+        - name: cast-db-persistent-storage
+          persistentVolumeClaim:
+            claimName: cast-db-pv-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cast-db-pv
+  namespace: default
+  labels:
+    app: cast-db
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: manuel
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/cast-db"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cast-db-pv-claim
+  namespace: default
+  labels:
+    app: cast-db
+spec:
+  storageClassName: manuel
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast-db
+  namespace: default
+  labels:
+    app: cast-db
+spec:
+  type: {{ .Values.castdb.service.type }}
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: {{ .Values.castdb.service.port }}
+      targetPort: {{ .Values.castdb.service.port }}
+  selector:
+    app: cast-db
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cast-db-secret
+  namespace: default
+  labels:
+    app: cast-db
+type: Opaque
+data:
+  postgres-root-username: YWRtaW4= # admin
+  postgres-root-password: cGFzc3dvcmQ= # password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cast-db-configmap
+  namespace: default
+  labels:
+    app: cast-db
+data:
+  postgres-dbname: cast_db_dev
+  # https://hub.docker.com/_/postgres
+  # /docker-entrypoint-initdb.d/init-db.sh
+  # postgres_cast.sql: |-
+  #   DROP DATABASE IF EXISTS cast_db_dev;
+  #   CREATE DATABASE cast_db_dev;
+---
