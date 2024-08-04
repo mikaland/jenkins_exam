@@ -16,25 +16,25 @@ spec:
     - host: exam.jenkins.dev
       http:
         paths:
-          # - path: /
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-svc
+                port:
+                  number: 80
+          # - path: /api/v1/movies
           #   pathType: Prefix
           #   backend:
           #     service:
-          #       name: nginx-svc
+          #       name: movie
           #       port:
           #         number: 80
-          - path: /api/v1/movies
-            pathType: Prefix
-            backend:
-              service:
-                name: movie
-                port:
-                  number: 80
-          - path: /api/v1/casts
-            pathType: Prefix
-            backend:
-              service:
-                name: cast
-                port:
-                  number: 80
+          # - path: /api/v1/casts
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: cast
+          #       port:
+          #         number: 80
 ---
